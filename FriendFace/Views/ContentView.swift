@@ -8,11 +8,12 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var users = [User]()
+    @FetchRequest(sortDescriptors: [SortDescriptor(\.name)]) var users: FetchedResults<CachedUser>
+//    @State private var users = [User]()
+    @Environment(\.managedObjectContext) var moc
     
     let networkManager: NetworkManagerAsync
     
-    // Initialize the view with the injected networkManager
     init(networkManager: NetworkManagerAsync) {
         self.networkManager = networkManager
     }
@@ -28,7 +29,7 @@ struct ContentView: View {
                             .fill(user.isActive ? .green : .red)
                             .frame(width: 30)
                         
-                        Text(user.name)
+                        Text(user.wrappedName)
                     }
                 }
             }
@@ -40,19 +41,12 @@ struct ContentView: View {
             do {
                 // Fetch users asynchronously using async/await
                 let fetchedUsers = try await networkManager.fetchUsers()
-                self.users = fetchedUsers
+                await MainActor.run {
+                    User.example.updateCache(in: moc, with: fetchedUsers)
+                }
             } catch {
                 print("Error fetching users: \(error.localizedDescription)")
             }
-            
-//            networkManager.fetchUsers { result in
-//                switch result {
-//                case .success(let fetchedUsers):
-//                    self.users = fetchedUsers
-//                case .failure(let error):
-//                    print("Error fetching users: \(error.localizedDescription)")
-//                }
-//            }
         }
         .padding()
     }
