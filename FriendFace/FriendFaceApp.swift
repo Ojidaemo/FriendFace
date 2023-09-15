@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct FriendFaceApp: App {
+    let networkManager = NetworkManager()
+    let networkManagerAsync = NetworkManagerAsync()
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(networkManager: networkManagerAsync)
         }
     }
 }
